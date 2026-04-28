@@ -1,0 +1,29 @@
+repos:
+  count: 5              # 주당 선정 레포 수
+  lookback_days: 7      # 검색 기간
+  min_stars: 100        # 최소 star 수 필터
+
+categories:             # 관심 카테고리 (비어있으면 전체)
+  - ai
+  - developer-tools
+  - productivity
+
+sources:
+  github_search:
+    enabled: true
+    weight: 0.6
+  github_trending:
+    enabled: true
+    weight: 0.4
+  hacker_news:
+    enabled: false
+    weight: 0.0
+
+wiki:
+  repo: "min5859/oss-radar"
+
+analysis:
+  language: "ko"
+  prompt_file: "prompts/analyze.md"
+  model: "sonnet"
+  max_retries: 2        # 한국어 검증 실패 시 재시도 횟수

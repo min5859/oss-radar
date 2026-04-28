@@ -8,10 +8,19 @@ REPOS_FILE="$ROOT/data/repos.json"
 ANALYSIS_DIR="$ROOT/data/analysis"
 LOG_FILE="$ROOT/logs/analyze.log"
 
+# Ensure claude CLI is in PATH (cron doesn't load user profile)
+export PATH="$HOME/.local/bin:$PATH"
+
+# Use venv python3 if available
+PYTHON3="$ROOT/.venv/bin/python3"
+if [ ! -f "$PYTHON3" ]; then
+    PYTHON3="python3"
+fi
+
 # Read config values from config.yaml
-PROMPT_FILE="$ROOT/$(python3 -c "import yaml; print(yaml.safe_load(open('$ROOT/config.yaml'))['analysis'].get('prompt_file', 'prompts/analyze.md'))")"
-MAX_RETRIES=$(python3 -c "import yaml; print(yaml.safe_load(open('$ROOT/config.yaml'))['analysis'].get('max_retries', 2))")
-MODEL=$(python3 -c "import yaml; print(yaml.safe_load(open('$ROOT/config.yaml'))['analysis'].get('model', 'sonnet'))")
+PROMPT_FILE="$ROOT/$($PYTHON3 -c "import yaml; print(yaml.safe_load(open('$ROOT/config.yaml'))['analysis'].get('prompt_file', 'prompts/analyze.md'))")"
+MAX_RETRIES=$($PYTHON3 -c "import yaml; print(yaml.safe_load(open('$ROOT/config.yaml'))['analysis'].get('max_retries', 2))")
+MODEL=$($PYTHON3 -c "import yaml; print(yaml.safe_load(open('$ROOT/config.yaml'))['analysis'].get('model', 'sonnet'))")
 
 log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] $*" | tee -a "$LOG_FILE"
@@ -32,10 +41,10 @@ sed_inplace() {
 
 # Check if output contains Korean characters (Hangul syllables, min 10)
 has_korean() {
-    python3 -c "
+    $PYTHON3 -c "
 import sys, re
 text = open(sys.argv[1], encoding='utf-8').read()
-if re.search(r'[\uAC00-\uD7A3]', text) and len(re.findall(r'[\uAC00-\uD7A3]', text)) >= 10:
+if re.search(r'[가-힣]', text) and len(re.findall(r'[가-힣]', text)) >= 10:
     sys.exit(0)
 else:
     sys.exit(1)
@@ -50,9 +59,6 @@ strip_bkit_footer() {
         sed_inplace -e :a -e '/^\n*$/{$d;N;ba' -e '}' "$file"
     fi
 }
-
-# Ensure claude CLI is in PATH (cron doesn't load user profile)
-export PATH="$HOME/.local/bin:$PATH"
 
 mkdir -p "$ANALYSIS_DIR"
 
@@ -77,19 +83,19 @@ fi
 
 PROMPT_TEMPLATE=$(cat "$PROMPT_FILE")
 
-REPO_COUNT=$(python3 -c "import json; print(len(json.load(open('$REPOS_FILE'))))")
+REPO_COUNT=$($PYTHON3 -c "import json; print(len(json.load(open('$REPOS_FILE'))))")
 SUCCESS_COUNT=0
 
 for i in $(seq 0 $((REPO_COUNT - 1))); do
-    FULL_NAME=$(python3 -c "import json; print(json.load(open('$REPOS_FILE'))[$i]['full_name'])")
-    OWNER=$(python3 -c "import json; print(json.load(open('$REPOS_FILE'))[$i]['owner'])")
-    NAME=$(python3 -c "import json; print(json.load(open('$REPOS_FILE'))[$i]['name'])")
-    DESCRIPTION=$(python3 -c "import json; print(json.load(open('$REPOS_FILE'))[$i].get('description', ''))")
-    STARS=$(python3 -c "import json; print(json.load(open('$REPOS_FILE'))[$i].get('stars', 0))")
-    LANGUAGE=$(python3 -c "import json; print(json.load(open('$REPOS_FILE'))[$i].get('language', ''))")
-    TOPICS=$(python3 -c "import json; d=json.load(open('$REPOS_FILE'))[$i]; print(', '.join(d.get('topics', [])))")
-    LICENSE=$(python3 -c "import json; print(json.load(open('$REPOS_FILE'))[$i].get('license', ''))")
-    README=$(python3 -c "import json; print(json.load(open('$REPOS_FILE'))[$i].get('readme', ''))")
+    FULL_NAME=$($PYTHON3 -c "import json; print(json.load(open('$REPOS_FILE'))[$i]['full_name'])")
+    OWNER=$($PYTHON3 -c "import json; print(json.load(open('$REPOS_FILE'))[$i]['owner'])")
+    NAME=$($PYTHON3 -c "import json; print(json.load(open('$REPOS_FILE'))[$i]['name'])")
+    DESCRIPTION=$($PYTHON3 -c "import json; print(json.load(open('$REPOS_FILE'))[$i].get('description', ''))")
+    STARS=$($PYTHON3 -c "import json; print(json.load(open('$REPOS_FILE'))[$i].get('stars', 0))")
+    LANGUAGE=$($PYTHON3 -c "import json; print(json.load(open('$REPOS_FILE'))[$i].get('language', ''))")
+    TOPICS=$($PYTHON3 -c "import json; d=json.load(open('$REPOS_FILE'))[$i]; print(', '.join(d.get('topics', [])))")
+    LICENSE=$($PYTHON3 -c "import json; print(json.load(open('$REPOS_FILE'))[$i].get('license', ''))")
+    README=$($PYTHON3 -c "import json; print(json.load(open('$REPOS_FILE'))[$i].get('readme', ''))")
 
     # Safe filename: owner_repo
     SAFE_NAME="${OWNER}_${NAME}"

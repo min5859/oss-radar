@@ -14,11 +14,9 @@
     <key>WorkingDirectory</key>
     <string>/Users/wooki/project/toy/oss-radar</string>
 
-    <!-- Every Monday at 09:00 KST -->
+    <!-- Every day at 09:00 KST -->
     <key>StartCalendarInterval</key>
     <dict>
-        <key>Weekday</key>
-        <integer>1</integer>
         <key>Hour</key>
         <integer>9</integer>
         <key>Minute</key>

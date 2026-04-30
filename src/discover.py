@@ -46,51 +46,58 @@ def save_history(history: set[str]) -> None:
 
 
 def fetch_github_search(lookback_days: int, min_stars: int, categories: list[str]) -> list[dict]:
-    """GitHub Search API로 최근 N일 star 급상승 레포 수집."""
+    """GitHub Search API로 최근 N일 star 급상승 레포 수집.
+
+    GitHub Repository Search API는 `topic:` 한정자에 OR 연산자를 지원하지 않으므로,
+    카테고리별로 별도 쿼리를 실행한 뒤 full_name 기준으로 병합한다.
+    """
     since = (datetime.now(UTC) - timedelta(days=lookback_days)).strftime("%Y-%m-%d")
 
     if categories:
-        topic_q = " ".join(f"topic:{c}" for c in categories)
-        q = f"stars:>={min_stars} pushed:>={since} ({topic_q})"
+        queries = [f"stars:>={min_stars} pushed:>={since} topic:{c}" for c in categories]
     else:
-        q = f"stars:>={min_stars} pushed:>={since}"
+        queries = [f"stars:>={min_stars} pushed:>={since}"]
 
-    repos = []
-    page = 1
-    while page <= 3:
-        try:
-            resp = requests.get(
-                f"{GITHUB_API}/search/repositories",
-                headers=HEADERS,
-                params={"q": q, "sort": "stars", "order": "desc", "per_page": 50, "page": page},
-                timeout=15,
-            )
-            resp.raise_for_status()
-            items = resp.json().get("items", [])
-            if not items:
+    merged: dict[str, dict] = {}
+    for q in queries:
+        page = 1
+        while page <= 3:
+            try:
+                resp = requests.get(
+                    f"{GITHUB_API}/search/repositories",
+                    headers=HEADERS,
+                    params={"q": q, "sort": "stars", "order": "desc", "per_page": 50, "page": page},
+                    timeout=15,
+                )
+                resp.raise_for_status()
+                items = resp.json().get("items", [])
+                if not items:
+                    break
+                for item in items:
+                    full_name = item["full_name"]
+                    if full_name in merged:
+                        continue
+                    merged[full_name] = {
+                        "full_name": full_name,
+                        "owner": item["owner"]["login"],
+                        "name": item["name"],
+                        "description": item.get("description", "") or "",
+                        "stars": item["stargazers_count"],
+                        "forks": item["forks_count"],
+                        "language": item.get("language", "") or "",
+                        "topics": item.get("topics", []),
+                        "url": item["html_url"],
+                        "pushed_at": item.get("pushed_at", ""),
+                        "created_at": item.get("created_at", ""),
+                        "source": "github_search",
+                    }
+                page += 1
+                time.sleep(1)
+            except requests.RequestException as e:
+                log.warning("GitHub Search API failed (q=%r page=%d): %s", q, page, e)
                 break
-            for item in items:
-                repos.append({
-                    "full_name": item["full_name"],
-                    "owner": item["owner"]["login"],
-                    "name": item["name"],
-                    "description": item.get("description", "") or "",
-                    "stars": item["stargazers_count"],
-                    "forks": item["forks_count"],
-                    "language": item.get("language", "") or "",
-                    "topics": item.get("topics", []),
-                    "url": item["html_url"],
-                    "pushed_at": item.get("pushed_at", ""),
-                    "created_at": item.get("created_at", ""),
-                    "source": "github_search",
-                })
-            page += 1
-            time.sleep(1)
-        except requests.RequestException as e:
-            log.warning("GitHub Search API failed (page %d): %s", page, e)
-            break
 
-    return repos
+    return list(merged.values())
 
 
 def fetch_github_trending() -> list[dict]:

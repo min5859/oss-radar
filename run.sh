@@ -6,6 +6,13 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 LOG_DIR="$SCRIPT_DIR/logs"
 LOG_FILE="$LOG_DIR/cron.log"
 
+# Load secrets (GITHUB_TOKEN, etc.) from gitignored env file
+if [ -f "$SCRIPT_DIR/config/.env" ]; then
+    set -a
+    source "$SCRIPT_DIR/config/.env"
+    set +a
+fi
+
 # Activate venv if present (for cron environment)
 if [ -f "$SCRIPT_DIR/.venv/bin/activate" ]; then
     source "$SCRIPT_DIR/.venv/bin/activate"

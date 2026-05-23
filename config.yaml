@@ -36,5 +36,5 @@ analysis:
     model: ""                # codex CLI model (빈 값이면 기본 모델 사용)
 
   cursor:
-    model: "sonnet-4"        # Model for cursor CLI
+    model: "claude-4.6-sonnet-medium"  # Model for cursor CLI
     api_key: ""

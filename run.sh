@@ -54,9 +54,9 @@ else
     exit 1
 fi
 
-# Step 3: Analyze with Claude (partial failure allowed)
-log "Step 3/4: Analyzing repos with Claude..."
-if bash "$SCRIPT_DIR/src/analyze.sh" 2>>"$LOG_FILE"; then
+# Step 3: Analyze with AI CLI (partial failure allowed)
+log "Step 3/4: Analyzing repos with AI CLI..."
+if python3 "$SCRIPT_DIR/src/analyze.py" 2>>"$LOG_FILE"; then
     log "Step 3 complete"
 else
     ANALYSIS_COUNT=$(find "$SCRIPT_DIR/data/analysis" -name "*.md" -size +0 2>/dev/null | wc -l | tr -d ' ')

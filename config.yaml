@@ -25,5 +25,16 @@ wiki:
 analysis:
   language: "ko"
   prompt_file: "prompts/analyze.md"
-  model: "sonnet"
-  max_retries: 2        # 한국어 검증 실패 시 재시도 횟수
+  provider: "codex"          # "claude" | "codex" | "cursor"
+  max_retries: 2             # 한국어 검증 실패 시 재시도 횟수
+
+  claude:
+    model: "sonnet"          # "sonnet", "opus", "haiku" or full model ID
+    api_key: ""              # ANTHROPIC_API_KEY override for cron/oneshot
+
+  codex:
+    model: ""                # codex CLI model (빈 값이면 기본 모델 사용)
+
+  cursor:
+    model: "sonnet-4"        # Model for cursor CLI
+    api_key: ""

@@ -88,7 +88,9 @@ rm ~/Library/LaunchAgents/com.wooki.oss-radar.plist
 | `repos.min_stars` | 100 | 최소 star 수 필터 |
 | `categories` | ai, developer-tools, productivity | 관심 카테고리 |
 | `wiki.repo` | min5859/oss-radar | Wiki 발행 대상 레포 |
-| `analysis.model` | sonnet | Claude 모델 |
+| `analysis.provider` | claude | 분석 CLI provider (`claude` 또는 `cursor`) |
+| `analysis.claude_model` | sonnet | claude CLI 용 모델 |
+| `analysis.cursor_model` | sonnet-4 | cursor-agent CLI 용 모델 |
 
 ---
 

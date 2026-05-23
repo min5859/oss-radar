@@ -27,7 +27,7 @@ discover.py → fetch.py → analyze.sh → publish.py
 |---|---|---|---|
 | `discover.py` | `config.yaml`, `data/history.json` | `data/repos.json` | GitHub에서 후보 레포 수집 및 점수화, 상위 N개 선정 |
 | `fetch.py` | `data/repos.json` | `data/repos.json` (업데이트) | 각 레포의 README·메타데이터 수집 |
-| `analyze.sh` | `data/repos.json` | `data/analysis/{owner}_{repo}.md` | Claude CLI로 한국어 분석 리포트 생성 |
+| `analyze.sh` | `data/repos.json` | `data/analysis/{owner}_{repo}.md` | AI provider CLI (claude / cursor-agent) 로 한국어 분석 리포트 생성 |
 | `publish.py` | `data/repos.json`, `data/analysis/` | GitHub Wiki | 분석 결과를 Wiki 페이지로 발행 |
 
 ---
@@ -105,7 +105,10 @@ wiki:
 analysis:
   language: "ko"
   prompt_file: "prompts/analyze.md"
-  model: "sonnet"
+  provider: "claude"        # claude | cursor
+  claude_model: "sonnet"
+  cursor_model: "sonnet-4"
+  max_retries: 2
 ```
 
 ---
@@ -116,7 +119,9 @@ analysis:
 - **history.json**: 이전에 분석한 레포 전체 이름 (`owner/repo`) 기록으로 중복 방지
 - **rate limit 대응**: GitHub API는 최소 1초 간격으로 호출, retry with backoff
 - **README 길이 제한**: 40,000자 초과 시 truncate (Claude 컨텍스트 절약)
-- **분석 호출**: `env -u CLAUDECODE claude -p` — 중첩 세션 방지
+- **분석 호출**: provider 는 `config.yaml` 의 `analysis.provider` 로 선택
+  - `claude`: `env -u CLAUDECODE claude -p` (중첩 세션 방지)
+  - `cursor`: `cursor-agent --print --trust` (headless trust prompt 회피)
 - **bkit footer 제거**: analyze.sh에서 Claude 출력의 bkit 보고 블록을 sed로 자동 제거
 - **언어 검증**: 분석 출력이 한국어인지 확인, 아니면 최대 2회 재시도
 
@@ -172,7 +177,8 @@ pip install -r requirements.txt
 | 변수 | 필수 | 설명 |
 |---|---|---|
 | `GITHUB_TOKEN` | 권장 | GitHub API rate limit 향상 (없으면 60 req/h) |
-| `ANTHROPIC_API_KEY` | 선택 | cron 환경에서 Claude 인증용 |
+| `ANTHROPIC_API_KEY` | 선택 | cron 환경에서 Claude 인증용 (provider: claude) |
+| `CURSOR_API_KEY` | 선택 | cron 환경에서 cursor-agent 인증용 (provider: cursor) |
 
 ---
 

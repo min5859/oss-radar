@@ -23,12 +23,16 @@ export PATH="/opt/homebrew/bin:$HOME/.local/bin:$HOME/.nvm/versions/node/$(ls "$
 
 mkdir -p "$LOG_DIR" "$SCRIPT_DIR/data/analysis"
 
+# Single log sink: route all stdout/stderr to the log file. launchd's StandardOutPath
+# also points here, so a tee would write every line twice — echo to the redirected fd instead.
+exec >> "$LOG_FILE" 2>&1
+
 log() {
-    echo "$(date '+%Y-%m-%d %H:%M:%S') [PIPELINE] $*" | tee -a "$LOG_FILE"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') [PIPELINE] $*"
 }
 
 error() {
-    echo "$(date '+%Y-%m-%d %H:%M:%S') [ERROR] $*" | tee -a "$LOG_FILE"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') [ERROR] $*"
 }
 
 START_TIME=$(date +%s)

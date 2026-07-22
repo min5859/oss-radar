@@ -38,7 +38,7 @@ log "========================================="
 
 # Step 1: Discover trending repos
 log "Step 1/4: Discovering trending repos..."
-if python3 "$SCRIPT_DIR/src/discover.py" 2>>"$LOG_FILE"; then
+if "$SCRIPT_DIR/.venv/bin/python" "$SCRIPT_DIR/src/discover.py" 2>>"$LOG_FILE"; then
     log "Step 1 complete"
 else
     error "Step 1 failed: discover.py"
@@ -47,7 +47,7 @@ fi
 
 # Step 2: Fetch README and metadata
 log "Step 2/4: Fetching README and metadata..."
-if python3 "$SCRIPT_DIR/src/fetch.py" 2>>"$LOG_FILE"; then
+if "$SCRIPT_DIR/.venv/bin/python" "$SCRIPT_DIR/src/fetch.py" 2>>"$LOG_FILE"; then
     log "Step 2 complete"
 else
     error "Step 2 failed: fetch.py"
@@ -56,21 +56,25 @@ fi
 
 # Step 3: Analyze with AI CLI (partial failure allowed)
 log "Step 3/4: Analyzing repos with AI CLI..."
-if python3 "$SCRIPT_DIR/src/analyze.py" 2>>"$LOG_FILE"; then
+STEP3_MARKER="$LOG_DIR/.step3-start"
+: > "$STEP3_MARKER"
+if "$SCRIPT_DIR/.venv/bin/python" "$SCRIPT_DIR/src/analyze.py" 2>>"$LOG_FILE"; then
     log "Step 3 complete"
 else
-    ANALYSIS_COUNT=$(find "$SCRIPT_DIR/data/analysis" -name "*.md" -size +0 2>/dev/null | wc -l | tr -d ' ')
+    # Count only analysis files (re)generated during THIS run, not stale accumulated ones
+    ANALYSIS_COUNT=$(find "$SCRIPT_DIR/data/analysis" -name "*.md" -size +0 -newer "$STEP3_MARKER" 2>/dev/null | wc -l | tr -d ' ')
     if [ "$ANALYSIS_COUNT" -gt 0 ]; then
-        log "Step 3 partially failed, but $ANALYSIS_COUNT analysis file(s) available — continuing"
+        log "Step 3 partially failed, but $ANALYSIS_COUNT fresh analysis file(s) from this run — continuing"
     else
-        error "Step 3 failed: no analysis files produced"
+        error "Step 3 failed: no fresh analysis files produced this run"
         exit 1
     fi
 fi
+rm -f "$STEP3_MARKER"
 
 # Step 4: Publish to GitHub Wiki
 log "Step 4/4: Publishing to GitHub Wiki..."
-if python3 "$SCRIPT_DIR/src/publish.py" 2>>"$LOG_FILE"; then
+if "$SCRIPT_DIR/.venv/bin/python" "$SCRIPT_DIR/src/publish.py" 2>>"$LOG_FILE"; then
     log "Step 4 complete"
 else
     error "Step 4 failed: publish.py"

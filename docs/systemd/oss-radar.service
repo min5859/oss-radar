@@ -1,0 +1,25 @@
+[Unit]
+Description=OSS Radar discovery, analysis, and GitHub Wiki publication
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=ossradar
+Group=ossradar
+WorkingDirectory=/srv/oss-radar
+Environment=HOME=/home/ossradar
+Environment=PATH=/home/ossradar/.local/bin:/usr/local/bin:/usr/bin:/bin
+Environment=GIT_TERMINAL_PROMPT=0
+EnvironmentFile=-/etc/oss-radar/oss-radar.env
+ExecStartPre=/usr/bin/test -x /srv/oss-radar/.venv/bin/python
+ExecStartPre=/usr/bin/test -x /home/ossradar/.local/bin/codex
+ExecStartPre=/usr/bin/git -C /srv/oss-radar pull --ff-only origin main
+ExecStart=/srv/oss-radar/run.sh
+TimeoutStartSec=30min
+KillMode=mixed
+UMask=0077
+Nice=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=oss-radar

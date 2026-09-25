@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
 """Publish OSS Radar analysis results to GitHub Wiki."""
 
+import argparse
+import base64
 import json
 import logging
-import shutil
+import os
 import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
 
 import yaml
+
+from history import mark_published
 
 logging.basicConfig(
     level=logging.INFO,
@@ -25,6 +29,24 @@ ROOT = Path(__file__).resolve().parent.parent
 CONFIG = yaml.safe_load((ROOT / "config.yaml").read_text())
 REPOS_FILE = ROOT / "data" / "repos.json"
 ANALYSIS_DIR = ROOT / "data" / "analysis"
+HISTORY_FILE = ROOT / "data" / "history.json"
+
+
+def git_env() -> dict[str, str]:
+    """Build a Git environment without placing a Wiki token in URLs or argv."""
+    env = dict(os.environ)
+    token = env.get("GITHUB_WIKI_TOKEN", "")
+    if not token:
+        return env
+
+    basic = base64.b64encode(f"x-access-token:{token}".encode()).decode()
+    env.update({
+        "GIT_CONFIG_COUNT": "1",
+        "GIT_CONFIG_KEY_0": "http.https://github.com/.extraheader",
+        "GIT_CONFIG_VALUE_0": f"AUTHORIZATION: basic {basic}",
+        "GIT_TERMINAL_PROMPT": "0",
+    })
+    return env
 
 
 def build_weekly_page(repos: list[dict], date_str: str) -> str:
@@ -105,7 +127,7 @@ def update_home(wiki_dir: Path, page_name: str, date_str: str) -> None:
     log.info("Updated Home.md")
 
 
-def git_push(wiki_dir: Path, date_str: str) -> None:
+def git_push(wiki_dir: Path, date_str: str, env: dict[str, str]) -> None:
     """변경 사항을 wiki 레포에 커밋 및 푸시."""
     cmds = [
         ["git", "-C", str(wiki_dir), "add", "-A"],
@@ -114,16 +136,27 @@ def git_push(wiki_dir: Path, date_str: str) -> None:
     ]
     for cmd in cmds:
         try:
-            subprocess.run(cmd, check=True, capture_output=True, text=True)
+            subprocess.run(cmd, check=True, capture_output=True, text=True, env=env)
         except subprocess.CalledProcessError as e:
             if "nothing to commit" in (e.stdout or "") + (e.stderr or ""):
                 log.info("Nothing to commit")
-                return
+                continue
             log.error("Git command failed: %s\n%s", " ".join(cmd), e.stderr)
             raise
 
 
-def main() -> None:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="build and validate the page without cloning, committing, pushing, or updating history",
+    )
+    return parser.parse_args(argv)
+
+
+def main(argv: list[str] | None = None) -> None:
+    args = parse_args(argv)
     if not REPOS_FILE.exists():
         log.error("repos.json not found. Run discover.py and fetch.py first.")
         sys.exit(1)
@@ -134,45 +167,59 @@ def main() -> None:
         sys.exit(1)
 
     repo_cfg = CONFIG["wiki"]["repo"]
-    wiki_url = f"git@github.com:{repo_cfg}.wiki.git"
+    wiki_url = os.environ.get("OSS_RADAR_WIKI_URL", f"git@github.com:{repo_cfg}.wiki.git")
     date_str = datetime.now().strftime("%Y-%m-%d")
     page_name = f"{date_str}-Weekly-OSS-Radar"
+    page_content = build_weekly_page(repos, date_str)
+
+    if args.dry_run:
+        if not page_content.strip() or f"# Weekly OSS Radar - {date_str}" not in page_content:
+            log.error("Dry-run page validation failed")
+            sys.exit(1)
+        log.info(
+            "Dry run complete: page=%s, repos=%d, bytes=%d; no Git or history changes made",
+            page_name,
+            len(repos),
+            len(page_content.encode()),
+        )
+        return
 
     wiki_dir = ROOT / "data" / "wiki_clone"
+    env = git_env()
     if wiki_dir.exists():
         log.info("Pulling existing wiki clone")
         try:
             subprocess.run(
                 ["git", "-C", str(wiki_dir), "pull", "--rebase"],
-                check=True, capture_output=True, text=True,
+                check=True, capture_output=True, text=True, env=env,
             )
         except subprocess.CalledProcessError:
-            log.warning("Pull failed, removing stale clone and re-cloning")
-            shutil.rmtree(wiki_dir)
+            log.exception(
+                "Pull failed; preserving the existing Wiki clone for inspection"
+            )
+            raise
 
     if not wiki_dir.exists():
         log.info("Cloning wiki repo: %s", wiki_url)
         try:
             subprocess.run(
                 ["git", "clone", wiki_url, str(wiki_dir)],
-                check=True, capture_output=True, text=True,
+                check=True, capture_output=True, text=True, env=env,
             )
         except subprocess.CalledProcessError:
-            log.warning("Clone failed (wiki may be empty), initializing")
-            wiki_dir.mkdir(parents=True, exist_ok=True)
-            subprocess.run(["git", "init"], cwd=str(wiki_dir), check=True, capture_output=True)
-            subprocess.run(
-                ["git", "remote", "add", "origin", wiki_url],
-                cwd=str(wiki_dir), check=True, capture_output=True,
+            log.exception(
+                "Clone failed; verify Wiki initialization and credentials before retrying"
             )
+            raise
 
-    page_content = build_weekly_page(repos, date_str)
     page_file = wiki_dir / f"{page_name}.md"
     page_file.write_text(page_content, encoding="utf-8")
     log.info("Created %s", page_file)
 
     update_home(wiki_dir, page_name, date_str)
-    git_push(wiki_dir, date_str)
+    git_push(wiki_dir, date_str, env)
+    history_count = mark_published(HISTORY_FILE, repos)
+    log.info("Updated published history: %d repositories", history_count)
     log.info("Published to wiki: %s", page_name)
 
 

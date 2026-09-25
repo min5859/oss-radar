@@ -12,6 +12,8 @@ import requests
 import yaml
 from bs4 import BeautifulSoup
 
+from history import load_history
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
@@ -33,16 +35,6 @@ HEADERS = {"Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "202
 import os
 if token := os.environ.get("GITHUB_TOKEN"):
     HEADERS["Authorization"] = f"Bearer {token}"
-
-
-def load_history() -> set[str]:
-    if HISTORY_FILE.exists():
-        return set(json.loads(HISTORY_FILE.read_text()))
-    return set()
-
-
-def save_history(history: set[str]) -> None:
-    HISTORY_FILE.write_text(json.dumps(sorted(history), indent=2))
 
 
 def fetch_github_search(lookback_days: int, min_stars: int, categories: list[str]) -> list[dict]:
@@ -210,7 +202,7 @@ def main() -> None:
     lookback = cfg_repos["lookback_days"]
     min_stars = cfg_repos["min_stars"]
     categories = CONFIG.get("categories", [])
-    history = load_history()
+    history = load_history(HISTORY_FILE)
 
     log.info("Discovering repos (lookback=%d days, count=%d, min_stars=%d)", lookback, count, min_stars)
 
@@ -243,9 +235,9 @@ def main() -> None:
     OUTPUT_FILE.write_text(json.dumps(selected, indent=2, ensure_ascii=False))
     log.info("Saved to %s", OUTPUT_FILE)
 
-    for r in selected:
-        history.add(r["full_name"])
-    save_history(history)
+    # history.json represents successfully published repositories. It is updated
+    # by publish.py only after the Wiki push succeeds so failed pipeline runs do
+    # not permanently suppress repositories that were never published.
 
 
 if __name__ == "__main__":

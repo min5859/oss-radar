@@ -52,6 +52,14 @@ def strip_bkit_footer(text: str) -> str:
     return text
 
 
+def cli_error_detail(stderr: str, limit: int = 4000) -> str:
+    """Keep the actionable tail of verbose CLI stderr output."""
+    detail = stderr.strip()
+    if len(detail) <= limit:
+        return detail
+    return f"... (truncated {len(detail) - limit} chars)\n{detail[-limit:]}"
+
+
 # ---------------------------------------------------------------------------
 # Provider functions: (prompt, model) -> output text | None
 # ---------------------------------------------------------------------------
@@ -67,7 +75,7 @@ def run_claude(prompt: str, model: str) -> str | None:
         capture_output=True, text=True, env=env,
     )
     if r.returncode != 0:
-        log.error("claude error: %s", r.stderr.strip()[:200])
+        log.error("claude error (exit=%d): %s", r.returncode, cli_error_detail(r.stderr))
         return None
     return strip_bkit_footer(r.stdout)
 
@@ -82,7 +90,7 @@ def run_codex(prompt: str, model: str) -> str | None:
             cmd += ["-m", model]
         r = subprocess.run(cmd, input=prompt, capture_output=True, text=True)
         if r.returncode != 0:
-            log.error("codex error: %s", r.stderr.strip()[:200])
+            log.error("codex error (exit=%d): %s", r.returncode, cli_error_detail(r.stderr))
             return None
         output = Path(tmp.name).read_text()
         return output if output.strip() else None
@@ -101,7 +109,7 @@ def run_cursor(prompt: str, model: str) -> str | None:
         capture_output=True, text=True, env=env,
     )
     if r.returncode != 0:
-        log.error("cursor error: %s", r.stderr.strip()[:200])
+        log.error("cursor error (exit=%d): %s", r.returncode, cli_error_detail(r.stderr))
         return None
     return r.stdout
 

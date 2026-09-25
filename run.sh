@@ -18,8 +18,14 @@ if [ -f "$SCRIPT_DIR/.venv/bin/activate" ]; then
     source "$SCRIPT_DIR/.venv/bin/activate"
 fi
 
-# Ensure Homebrew, nvm, and claude CLI are in PATH (cron doesn't load user profile)
-export PATH="/opt/homebrew/bin:$HOME/.local/bin:$HOME/.nvm/versions/node/$(ls "$HOME/.nvm/versions/node/" 2>/dev/null | tail -1)/bin:$PATH"
+# Ensure user-installed AI CLIs and optional Homebrew/nvm installs are visible.
+# The nvm directory is optional on Linux; the newest globbed version ends up first.
+for node_bin in "$HOME"/.nvm/versions/node/*/bin; do
+    if [ -d "$node_bin" ]; then
+        PATH="$node_bin:$PATH"
+    fi
+done
+export PATH="/opt/homebrew/bin:$HOME/.local/bin:/usr/local/bin:$PATH"
 
 mkdir -p "$LOG_DIR" "$SCRIPT_DIR/data/analysis"
 
@@ -77,8 +83,14 @@ fi
 rm -f "$STEP3_MARKER"
 
 # Step 4: Publish to GitHub Wiki
-log "Step 4/4: Publishing to GitHub Wiki..."
-if "$SCRIPT_DIR/.venv/bin/python" "$SCRIPT_DIR/src/publish.py" 2>>"$LOG_FILE"; then
+PUBLISH_ARGS=()
+if [ "${OSS_RADAR_DRY_RUN:-0}" = "1" ]; then
+    PUBLISH_ARGS+=(--dry-run)
+    log "Step 4/4: Validating GitHub Wiki output (dry-run)..."
+else
+    log "Step 4/4: Publishing to GitHub Wiki..."
+fi
+if "$SCRIPT_DIR/.venv/bin/python" "$SCRIPT_DIR/src/publish.py" "${PUBLISH_ARGS[@]}" 2>>"$LOG_FILE"; then
     log "Step 4 complete"
 else
     error "Step 4 failed: publish.py"

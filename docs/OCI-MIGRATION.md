@@ -294,16 +294,22 @@ OCI 중지를 확인한 뒤에만 Mac LaunchAgent를 다시 등록합니다.
 - OCI에서 단위 테스트 5개, Python compileall, `bash -n` 통과
 - 설치된 systemd 파일과 저장소 템플릿의 SHA-256 일치 확인
 - systemd와 수동 실행이 같은 `config/.env`를 읽도록 통일
-- 남은 사용자 작업: GitHub 토큰 입력, Codex Device Code 승인, 전체 dry-run,
-  Mac 중지, OCI timer 활성화
+- 남은 사용자 작업: OCI timer 활성화와 첫 자동 실행 확인
+
+### 2026-09-25 Mac writer 중지
+
+- `com.wooki.oss-radar` LaunchAgent를 bootout하고 disabled 상태로 전환
+- 롤백용 plist는 `~/Library/LaunchAgents/`에 보존
+- 사용자 crontab에 별도 `oss-radar` 항목이 없음을 확인
+- OCI timer를 활성화하기 전까지 자동 writer가 없는 컷오버 구간
 
 ### 2026-09-25 분석 CLI를 Cursor로 전환
 
 - `analysis.provider`를 `cursor`로 변경
 - 분석 호출은 `agent -p --mode ask`이며, 실행 전 `agent status`로 인증을 확인
 - systemd `ExecStartPre`는 Cursor Agent 바이너리를 확인
-- 남은 사용자 작업: `ossradar`의 Cursor 로그인 또는 `CURSOR_API_KEY`, 전체 dry-run,
-  Mac 중지, OCI timer 활성화
+- `ossradar` 사용자로 Cursor 로그인과 전체 dry-run까지 완료
+- 남은 사용자 작업: OCI timer 활성화
 
 
 ### 2026-09-25 런타임 검증
@@ -320,8 +326,5 @@ OCI 중지를 확인한 뒤에만 Mac LaunchAgent를 다시 등록합니다.
 
 다음은 운영자 확인 전 수행하지 않습니다.
 
-- GitHub 토큰 생성 또는 계정 설정 변경
-- Cursor Agent 브라우저 로그인 또는 API 키 입력
-- Mac LaunchAgent 중지
 - OCI timer 활성화
 - 실제 Wiki 게시 실행

@@ -83,6 +83,13 @@ python3 scripts/reconcile_history.py
 python3 scripts/reconcile_history.py --apply
 ```
 
+Wiki 자격증명은 실제 변경 없이 확인할 수 있습니다. 먼저 `config/.env`를 로드한
+셸에서 실행합니다.
+
+```bash
+python3 scripts/check_wiki_access.py
+```
+
 ---
 
 ## 자동화 설치 (macOS launchd)
@@ -135,6 +142,7 @@ oss-radar/
 │   ├── analyze.py         # Claude/Codex/Cursor 분석 호출
 │   └── publish.py         # GitHub Wiki 발행
 ├── scripts/
+│   ├── check_wiki_access.py  # 변경 없는 Wiki push 인증 점검
 │   └── reconcile_history.py  # 발행 Wiki 기준 history 복구
 ├── docs/
 │   ├── OCI-MIGRATION.md

@@ -190,7 +190,18 @@ sudo -u ossradar -H env OSS_RADAR_DRY_RUN=1 \
 
 마지막 명령은 수집과 분석까지 수행하지만 Wiki push와 history 갱신은 하지 않습니다.
 Wiki 쓰기 인증은 별도로 기존 clone 또는 임시 clone에서 `git push --dry-run`으로
-확인합니다.
+확인합니다. 다음 명령은 `.env`를 현재 셸에만 로드하고, 임시 clone을 제거한 뒤
+종료합니다. 토큰은 URL이나 명령 인자에 포함되지 않습니다.
+
+```bash
+sudo -u ossradar -H bash -c '
+  set -a
+  source /srv/oss-radar/config/.env
+  set +a
+  /srv/oss-radar/.venv/bin/python \
+    /srv/oss-radar/scripts/check_wiki_access.py
+'
+```
 
 ## 7. 스케줄 선택
 

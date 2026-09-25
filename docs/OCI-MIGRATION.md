@@ -284,9 +284,10 @@ OCI 중지를 확인한 뒤에만 Mac LaunchAgent를 다시 등록합니다.
 - `/srv/oss-radar/config/.env` 비밀값 없는 템플릿 설치(0600 ossradar)
 - systemd service/timer 설치와 `systemd-analyze verify` 완료
 - `oss-radar.timer`는 `disabled`, `inactive` 상태로 유지
-- 변경 commit `b2cb85c`를 `origin/main`에 push하고 OCI checkout을 fast-forward
+- 변경 내용을 `origin/main`에 push하고 OCI checkout을 fast-forward
 - OCI에서 단위 테스트 5개, Python compileall, `bash -n` 통과
 - 설치된 systemd 파일과 저장소 템플릿의 SHA-256 일치 확인
+- systemd와 수동 실행이 같은 `config/.env`를 읽도록 통일
 - 남은 사용자 작업: GitHub 토큰 입력, Codex Device Code 승인, 전체 dry-run,
   Mac 중지, OCI timer 활성화
 

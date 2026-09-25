@@ -17,7 +17,7 @@ OCI systemd timer (현재 기준 매일 05:00 KST)
 
 완료 조건:
 
-- 전용 `ossradar` 사용자로 Python, Git, Codex CLI가 실행됩니다.
+- 전용 `ossradar` 사용자로 Python, Git, Cursor Agent CLI가 실행됩니다.
 - Search API 읽기 자격증명과 Wiki 쓰기 자격증명이 분리되어 있습니다.
 - `history.json`은 실제 발행된 레포만 포함합니다.
 - 게시 없는 dry-run과 Wiki push dry-run이 성공합니다.
@@ -96,22 +96,15 @@ sudo -u ossradar -H /srv/oss-radar/.venv/bin/pip install \
   -r /srv/oss-radar/requirements.txt
 ```
 
-Codex CLI는 공식 standalone installer를 내려받아 내용을 확인한 뒤 `ossradar`
-사용자로 설치합니다.
+Cursor Agent CLI는 공식 installer를 내려받아 내용을 확인한 뒤 `ossradar`
+사용자 HOME에서 설치합니다. 분석은 `agent -p --mode ask`로 호출하며, 쓰기 도구는
+사용하지 않습니다.
 
 ```bash
-sudo -u ossradar -H bash -lc \
-  'curl -fsSL https://chatgpt.com/codex/install.sh | sh'
-sudo -u ossradar -H /home/ossradar/.local/bin/codex --version
-```
-
-`sudo -u` 실행 전 현재 디렉터리가 `/home/ubuntu`처럼 `ossradar`가 접근할 수 없는
-경로이면 installer 내부 `find`가 실패할 수 있습니다. 반드시 대상 사용자 HOME으로
-이동한 셸에서 실행합니다.
-
-```bash
-sudo -u ossradar -H bash -c \
-  'cd "$HOME" && bash /tmp/oss-radar-codex-install.sh'
+sudo -u ossradar -H bash -c 'cd "$HOME" && curl -fsSL https://cursor.com/install -o /tmp/cursor-install.sh'
+# 스크립트 내용을 확인한 뒤
+sudo -u ossradar -H bash -c 'cd "$HOME" && bash /tmp/cursor-install.sh'
+sudo -u ossradar -H /home/ossradar/.local/bin/agent --version
 ```
 
 systemd 파일은 설치하되 아직 timer를 활성화하지 않습니다.
@@ -147,18 +140,20 @@ sudoedit /srv/oss-radar/config/.env
 
 토큰 값은 저장소, 터미널 출력, 대화 또는 journal에 남기지 않습니다.
 
-### 5.2 Codex Device Code 승인
+### 5.2 Cursor Agent 로그인
 
-공식 OpenAI 문서는 headless 환경에서 Device Code 로그인을 우선 권장합니다.
+headless 실행은 `CURSOR_API_KEY` 또는 `ossradar` 사용자의 `agent login` 세션을
+사용합니다. API 키를 쓰는 경우 `/srv/oss-radar/config/.env`에만 넣고, 로그인
+세션을 쓰는 경우 아래를 실행합니다.
 
 ```bash
+sudo -u ossradar -H env NO_OPEN_BROWSER=1 \
+  /home/ossradar/.local/bin/agent login
 sudo -u ossradar -H \
-  /home/ossradar/.local/bin/codex login --device-auth
-sudo -u ossradar -H \
-  /home/ossradar/.local/bin/codex login status
+  /home/ossradar/.local/bin/agent status
 ```
 
-표시된 URL과 일회용 코드는 운영자가 브라우저에서 승인합니다. 인증 캐시는 비밀로
+표시된 URL은 운영자가 브라우저에서 승인합니다. 인증 캐시와 API 키는 비밀로
 취급하고 저장소에 복사하지 않습니다.
 
 ### 5.3 컷오버 승인
@@ -302,12 +297,31 @@ OCI 중지를 확인한 뒤에만 Mac LaunchAgent를 다시 등록합니다.
 - 남은 사용자 작업: GitHub 토큰 입력, Codex Device Code 승인, 전체 dry-run,
   Mac 중지, OCI timer 활성화
 
+### 2026-09-25 분석 CLI를 Cursor로 전환
+
+- `analysis.provider`를 `cursor`로 변경
+- 분석 호출은 `agent -p --mode ask`이며, 실행 전 `agent status`로 인증을 확인
+- systemd `ExecStartPre`는 Cursor Agent 바이너리를 확인
+- 남은 사용자 작업: `ossradar`의 Cursor 로그인 또는 `CURSOR_API_KEY`, 전체 dry-run,
+  Mac 중지, OCI timer 활성화
+
+
+### 2026-09-25 런타임 검증
+
+- 이후 변경은 `/srv/oss-radar`에만 반영
+- 분석 모델을 `claude-sonnet-5-medium`으로 설정
+- `ossradar`로 단위 테스트 5개, compileall, `bash -n` 통과
+- Wiki push dry-run 성공. 원격 commit은 변경하지 않음
+- Cursor Agent 로그인 완료 (`min5859@gmail.com`)
+- 게시 없는 전체 dry-run 성공: 후보 5개, README 5개, Sonnet 5 medium 분석 5개, Wiki 출력 검증. history 600개와 원격 Wiki는 불변
+- timer는 `disabled`로 유지. Mac 중지 확인 전에는 활성화하지 않음
+
 ### 안전 경계
 
 다음은 운영자 확인 전 수행하지 않습니다.
 
 - GitHub 토큰 생성 또는 계정 설정 변경
-- Codex Device Code 브라우저 승인
+- Cursor Agent 브라우저 로그인 또는 API 키 입력
 - Mac LaunchAgent 중지
 - OCI timer 활성화
 - 실제 Wiki 게시 실행

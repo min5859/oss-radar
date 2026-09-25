@@ -25,7 +25,7 @@ wiki:
 analysis:
   language: "ko"
   prompt_file: "prompts/analyze.md"
-  provider: "codex"          # "claude" | "codex" | "cursor"
+  provider: "cursor"         # "claude" | "codex" | "cursor"
   max_retries: 2             # 한국어 검증 실패 시 재시도 횟수
 
   claude:
@@ -36,5 +36,5 @@ analysis:
     model: ""                # codex CLI model (빈 값이면 기본 모델 사용)
 
   cursor:
-    model: "claude-4.6-sonnet-medium"  # Model for cursor CLI
+    model: "claude-sonnet-5-medium"  # 한국어 요약 리포트용
     api_key: ""

@@ -110,8 +110,8 @@ rm ~/Library/LaunchAgents/com.wooki.oss-radar.plist
 
 OCI 준비, systemd 설치, 상태 파일 이관, 컷오버와 롤백 절차는
 [`docs/OCI-MIGRATION.md`](docs/OCI-MIGRATION.md)를 따릅니다. 서비스와 timer
-템플릿은 `docs/systemd/`에 있습니다. GitHub 자격증명 등록, Codex Device Code
-승인, 기존 Mac 자동화 중지, OCI timer 활성화는 운영자가 직접 확인합니다.
+템플릿은 `docs/systemd/`에 있습니다. GitHub 자격증명 등록, Cursor Agent 로그인,
+기존 Mac 자동화 중지, OCI timer 활성화는 운영자가 직접 확인합니다.
 
 ---
 
@@ -124,7 +124,7 @@ OCI 준비, systemd 설치, 상태 파일 이관, 컷오버와 롤백 절차는
 | `repos.min_stars` | 100 | 최소 star 수 필터 |
 | `categories` | ai, developer-tools, productivity | 관심 카테고리 |
 | `wiki.repo` | min5859/oss-radar | Wiki 발행 대상 레포 |
-| `analysis.provider` | codex | 분석 CLI provider (`claude`, `codex`, `cursor`) |
+| `analysis.provider` | cursor | 분석 CLI provider (`claude`, `codex`, `cursor`) |
 | `analysis.<provider>.model` | provider별 설정 | 비어 있으면 CLI 기본 모델 |
 
 ---

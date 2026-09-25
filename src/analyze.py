@@ -104,10 +104,13 @@ def run_cursor(prompt: str, model: str) -> str | None:
     api_key = cfg.get("api_key", "")
     if api_key:
         env["CURSOR_API_KEY"] = api_key
-    r = subprocess.run(
-        ["agent", "-p", "--model", model, "--output-format", "text", "--trust", prompt],
-        capture_output=True, text=True, env=env,
-    )
+    cmd = [
+        "agent", "-p", "--mode", "ask", "--output-format", "text", "--trust",
+    ]
+    if model:
+        cmd += ["--model", model]
+    cmd.append(prompt)
+    r = subprocess.run(cmd, capture_output=True, text=True, env=env)
     if r.returncode != 0:
         log.error("cursor error (exit=%d): %s", r.returncode, cli_error_detail(r.stderr))
         return None
@@ -138,6 +141,23 @@ def check_provider(name: str) -> None:
             log.error("claude CLI auth failed. Set api_key in config.yaml or run 'claude login'.")
             sys.exit(1)
         log.info("claude CLI authentication verified")
+    elif name == "cursor":
+        cfg = ANALYSIS_CFG.get("cursor", {})
+        model = cfg.get("model", "")
+        env = dict(os.environ)
+        api_key = cfg.get("api_key", "")
+        if api_key:
+            env["CURSOR_API_KEY"] = api_key
+        log.info("Checking cursor CLI authentication (model: %s)...", model or "default")
+        r = subprocess.run(["agent", "status"], capture_output=True, text=True, env=env)
+        status_text = f"{r.stdout}\n{r.stderr}".strip()
+        if r.returncode != 0 or "not logged in" in status_text.lower():
+            log.error(
+                "cursor CLI auth failed. Set CURSOR_API_KEY or run 'agent login'. %s",
+                cli_error_detail(status_text),
+            )
+            sys.exit(1)
+        log.info("cursor CLI authentication verified")
     else:
         log.info("%s CLI found: %s", name, shutil.which(cmd))
 

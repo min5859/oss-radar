@@ -24,20 +24,21 @@ OCI systemd timer (현재 기준 매일 05:00 KST)
 - Mac LaunchAgent와 OCI timer가 동시에 활성화되지 않습니다.
 - OCI 자동 실행이 2회 연속 성공합니다.
 
-## 현재 상태 (2026-09-25)
+## 현재 상태 (2026-09-26)
 
 끝난 항목:
 
 - 운영 경로는 `/srv/oss-radar`이고, `ossradar` 사용자로 실행합니다.
 - 분석 provider는 Cursor Agent, 모델은 `claude-sonnet-5-medium`입니다.
 - GitHub 읽기/Wiki 쓰기 자격증명, Cursor 로그인, Wiki push dry-run, 게시 없는 전체 dry-run이 끝났습니다.
-- 변경은 `8675bf6`로 `origin/main`에 있습니다.
-- Mac LaunchAgent는 중지되었고, `oss-radar.timer`는 `enabled`이며 서비스는 즉시 실행되지 않았습니다.
+- Mac LaunchAgent는 중지되었고, `oss-radar.timer`는 `enabled`입니다.
+- `ossradar`의 Git 작성자는 `Wooki Min <min5859@gmail.com>`입니다.
+- 2026-09-25 Wiki 페이지 수동 재실행이 성공했습니다. 커밋 `47ef076`, `history.json`은 605개입니다.
 
 남은 항목:
 
-- 2026-09-26 05:00 KST 첫 자동 실행 결과를 확인합니다. service 결과, journal, 당일 Wiki 페이지, `data/history.json` 증가를 봅니다.
-- 그다음 자동 실행까지 2회 연속 성공하면 이관 완료입니다.
+- 예약 실행 성공은 아직 없습니다. 2026-09-26 05:00 KST 자동 실행은 발행 전에 실패했습니다.
+- 다음 자동 실행은 2026-09-27 05:00 KST입니다. 그 실행과 이어지는 1회까지 성공하면 이관 완료입니다.
 - 롤백이 필요하면 OCI timer를 먼저 끄고, 중지를 확인한 뒤에만 Mac LaunchAgent를 다시 등록합니다.
 
 ## 2. 확인된 환경과 이전 이관에서 재사용할 패턴
@@ -345,6 +346,28 @@ OCI 중지를 확인한 뒤에만 Mac LaunchAgent를 다시 등록합니다.
 - `Persistent=false`라서 지난 05:00 KST 실행은 따라잡지 않음
 - 다음 실행: 2026-09-26 05:00 KST (2026-09-25 20:00 UTC)
 - 남은 확인: 첫 자동 실행과 이어지는 1회, 합계 2회 연속 성공
+
+### 2026-09-26 첫 발행 실패와 수동 재실행
+
+2026-09-26 05:00 KST 자동 실행은 수집, README, 분석까지 성공하고 Wiki 발행에서 실패했습니다.
+
+- `ossradar`에 `user.name`과 `user.email`이 없어서 `git commit`이 거절됨
+- 감지된 주소: `ossradar@freevm-arm.(none)`
+- 로컬 Wiki 클론에 `2026-09-25-Weekly-OSS-Radar.md`와 `Home.md` 변경만 남고 push되지 않음
+- `history.json`은 600개로 유지. 발행 전 갱신은 일어나지 않음
+
+작성자 정보를 넣은 뒤 `systemctl start`를 다시 실행했지만, 커밋되지 않은 Wiki 변경이 있어 `git pull --rebase`가 거절했습니다.
+
+- 오류: `cannot pull with rebase: Your index contains uncommitted changes.`
+
+복구는 미발행 로컬 변경을 `git reset --hard HEAD`로 되돌린 뒤 같은 서비스를 다시 실행한 것입니다. 페이지는 파이프라인이 다시 만들었습니다.
+
+- 2026-09-25 23:28 UTC 실행 결과: `success`
+- Wiki `47ef076` `Weekly OSS Radar - 2026-09-25`, 작성자 `Wooki Min <min5859@gmail.com>`
+- `history.json` 605개
+- 다음 자동 실행: 2026-09-27 05:00 KST
+
+이후 서비스 계정은 Wiki 커밋 전에 Git 작성자가 설정되어 있어야 합니다. 발행이 커밋 전에 실패하면 Wiki 클론의 미완료 변경을 먼저 정리해야 다음 `pull --rebase`가 진행됩니다.
 
 ### 안전 경계
 

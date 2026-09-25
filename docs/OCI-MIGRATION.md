@@ -24,6 +24,22 @@ OCI systemd timer (현재 기준 매일 05:00 KST)
 - Mac LaunchAgent와 OCI timer가 동시에 활성화되지 않습니다.
 - OCI 자동 실행이 2회 연속 성공합니다.
 
+## 현재 상태 (2026-09-25)
+
+끝난 항목:
+
+- 운영 경로는 `/srv/oss-radar`이고, `ossradar` 사용자로 실행합니다.
+- 분석 provider는 Cursor Agent, 모델은 `claude-sonnet-5-medium`입니다.
+- GitHub 읽기/Wiki 쓰기 자격증명, Cursor 로그인, Wiki push dry-run, 게시 없는 전체 dry-run이 끝났습니다.
+- 변경은 `8675bf6`로 `origin/main`에 있습니다.
+- Mac LaunchAgent는 중지되었고, `oss-radar.timer`는 `enabled`이며 서비스는 즉시 실행되지 않았습니다.
+
+남은 항목:
+
+- 2026-09-26 05:00 KST 첫 자동 실행 결과를 확인합니다. service 결과, journal, 당일 Wiki 페이지, `data/history.json` 증가를 봅니다.
+- 그다음 자동 실행까지 2회 연속 성공하면 이관 완료입니다.
+- 롤백이 필요하면 OCI timer를 먼저 끄고, 중지를 확인한 뒤에만 Mac LaunchAgent를 다시 등록합니다.
+
 ## 2. 확인된 환경과 이전 이관에서 재사용할 패턴
 
 2026-09-25 읽기 전용 점검 결과:
@@ -320,11 +336,20 @@ OCI 중지를 확인한 뒤에만 Mac LaunchAgent를 다시 등록합니다.
 - Wiki push dry-run 성공. 원격 commit은 변경하지 않음
 - Cursor Agent 로그인 완료 (`min5859@gmail.com`)
 - 게시 없는 전체 dry-run 성공: 후보 5개, README 5개, Sonnet 5 medium 분석 5개, Wiki 출력 검증. history 600개와 원격 Wiki는 불변
-- timer는 `disabled`로 유지. Mac 중지 확인 전에는 활성화하지 않음
+- timer는 당시 `disabled`로 유지. Mac 중지 확인 전에는 활성화하지 않음
+
+### 2026-09-25 OCI timer 활성화
+
+- 운영자가 Mac LaunchAgent 중지를 확인한 뒤 `systemctl enable --now oss-radar.timer` 실행
+- 상태: `enabled`, `active (waiting)`. `oss-radar.service`는 `inactive`
+- `Persistent=false`라서 지난 05:00 KST 실행은 따라잡지 않음
+- 다음 실행: 2026-09-26 05:00 KST (2026-09-25 20:00 UTC)
+- 남은 확인: 첫 자동 실행과 이어지는 1회, 합계 2회 연속 성공
 
 ### 안전 경계
 
-다음은 운영자 확인 전 수행하지 않습니다.
+컷오버 이후에도 다음 순서를 유지합니다.
 
-- OCI timer 활성화
-- 실제 Wiki 게시 실행
+- Mac LaunchAgent와 OCI timer를 동시에 켜지 않습니다.
+- 롤백 시 OCI timer를 먼저 중지합니다.
+- 예약 실행 밖의 수동 Wiki 게시는 하지 않습니다.

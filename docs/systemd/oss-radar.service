@@ -11,7 +11,7 @@ WorkingDirectory=/srv/oss-radar
 Environment=HOME=/home/ossradar
 Environment=PATH=/home/ossradar/.local/bin:/usr/local/bin:/usr/bin:/bin
 Environment=GIT_TERMINAL_PROMPT=0
-EnvironmentFile=-/etc/oss-radar/oss-radar.env
+EnvironmentFile=-/srv/oss-radar/config/.env
 ExecStartPre=/usr/bin/test -x /srv/oss-radar/.venv/bin/python
 ExecStartPre=/usr/bin/test -x /home/ossradar/.local/bin/codex
 ExecStartPre=/usr/bin/git -C /srv/oss-radar pull --ff-only origin main

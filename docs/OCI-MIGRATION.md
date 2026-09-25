@@ -136,14 +136,13 @@ sudo systemd-analyze verify \
 1. Search API용 읽기 전용 토큰을 준비합니다.
 2. `min5859/oss-radar`만 대상으로 하고 Wiki push가 가능한 최소 권한의
    자격증명을 준비합니다.
-3. OCI의 `/etc/oss-radar/oss-radar.env`에 입력합니다.
+3. OCI의 `/srv/oss-radar/config/.env`에 입력합니다.
 
 ```bash
-sudo install -d -o root -g root -m 0755 /etc/oss-radar
-sudo install -o root -g root -m 0600 \
+sudo install -o ossradar -g ossradar -m 0600 \
   /srv/oss-radar/docs/systemd/oss-radar.env.example \
-  /etc/oss-radar/oss-radar.env
-sudoedit /etc/oss-radar/oss-radar.env
+  /srv/oss-radar/config/.env
+sudoedit /srv/oss-radar/config/.env
 ```
 
 토큰 값은 저장소, 터미널 출력, 대화 또는 journal에 남기지 않습니다.
@@ -282,7 +281,7 @@ OCI 중지를 확인한 뒤에만 Mac LaunchAgent를 다시 등록합니다.
 - Python 3.12 가상환경과 프로젝트 의존성 설치
 - 공식 standalone installer로 ARM64 Codex CLI 0.157.0 설치
 - 복구된 history 600개를 SHA-256 일치 확인 후 전송
-- `/etc/oss-radar/oss-radar.env` 비밀값 없는 템플릿 설치(0600 root)
+- `/srv/oss-radar/config/.env` 비밀값 없는 템플릿 설치(0600 ossradar)
 - systemd service/timer 설치와 `systemd-analyze verify` 완료
 - `oss-radar.timer`는 `disabled`, `inactive` 상태로 유지
 - 변경 commit `b2cb85c`를 `origin/main`에 push하고 OCI checkout을 fast-forward

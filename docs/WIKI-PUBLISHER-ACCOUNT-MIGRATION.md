@@ -208,6 +208,31 @@ OSS Radar가 새 계정으로 정상 자동 실행되는 것을 확인한 뒤 �
 - `oss-radar.timer`를 enabled/active 상태로 복구
 - 다음 실행: 2026-09-28 05:00 KST
 
+### 실행 중 일시적 실패와 복구
+
+운영 게시에는 영향을 주지 않았지만 재사용할 수 있는 교훈으로 다음 실패를
+기록합니다. 세 경우 모두 timer가 중지된 유지보수 구간에 발생했습니다.
+
+1. **홈 이동 직후 symlink 복구 명령 중단**
+   - 원인: `~/.local/bin/codex`뿐 아니라 Codex의 `current` symlink도
+     `/home/ossradar` 절대경로를 가리켜 새 경로 실행 검사에 실패
+   - 영향: `set -e`가 실제 수정 전에 명령을 중단해 부분 변경 없음
+   - 복구: release → `current` → `~/.local/bin/codex` 순으로 연결하고,
+     Cursor `agent`와 `cursor-agent`도 새 HOME 기준으로 재연결
+
+2. **전체 dry-run을 로컬 Mac 셸에 잘못 전달**
+   - 증상: `sudo: unknown user wiki-publisher`
+   - 영향: Mac에 해당 사용자가 없어 즉시 종료됐으며 로컬과 OCI 변경 없음
+   - 복구: SSH 대상에서 동일 명령을 다시 실행해 전체 dry-run 성공
+
+3. **root 전용 백업 디렉터리 checksum glob 실패**
+   - 원인: 일반 `ubuntu` 셸이 mode 0700 디렉터리의 `*`를 먼저 확장하지 못함
+   - 영향: checksum 출력만 실패했으며 백업 파일 생성은 이미 완료
+   - 복구: `sudo find ... -exec sha256sum`으로 세 백업 파일을 최종 검증
+
+계정 rename, 인증, Wiki 권한, 파이프라인 분석, timer 복구 단계 자체의 실패는
+없었습니다.
+
 첫 정기 실행 후 다음을 추가 확인하면 계정 rename 검증이 완료됩니다.
 
 ```bash

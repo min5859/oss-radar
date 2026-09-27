@@ -17,7 +17,7 @@ OCI systemd timer (현재 기준 매일 05:00 KST)
 
 완료 조건:
 
-- 전용 `ossradar` 사용자로 Python, Git, Cursor Agent CLI가 실행됩니다.
+- 공용 `wiki-publisher` 사용자로 Python, Git, Cursor Agent CLI가 실행됩니다.
 - Search API 읽기 자격증명과 Wiki 쓰기 자격증명이 분리되어 있습니다.
 - `history.json`은 실제 발행된 레포만 포함합니다.
 - 게시 없는 dry-run과 Wiki push dry-run이 성공합니다.
@@ -28,11 +28,11 @@ OCI systemd timer (현재 기준 매일 05:00 KST)
 
 끝난 항목:
 
-- 운영 경로는 `/srv/oss-radar`이고, `ossradar` 사용자로 실행합니다.
+- 운영 경로는 `/srv/oss-radar`이고, `wiki-publisher` 사용자로 실행합니다.
 - 분석 provider는 Cursor Agent, 모델은 `claude-sonnet-5-medium`입니다.
 - GitHub 읽기/Wiki 쓰기 자격증명, Cursor 로그인, Wiki push dry-run, 게시 없는 전체 dry-run이 끝났습니다.
 - Mac LaunchAgent는 중지되었고, `oss-radar.timer`는 `enabled`입니다.
-- `ossradar`의 Git 작성자는 `Wooki Min <min5859@gmail.com>`입니다.
+- `wiki-publisher`의 Git 작성자는 `Wooki Min <min5859@gmail.com>`입니다.
 - 2026-09-25 Wiki 페이지 수동 재실행이 성공했습니다. 커밋 `47ef076`, `history.json`은 605개입니다.
 
 남은 항목:
@@ -245,7 +245,7 @@ systemctl show oss-radar.service \
   -p Result -p ExecMainStatus -p ActiveState -p InactiveExitTimestamp
 journalctl -u oss-radar.service --since '-2 hours' --no-pager
 systemctl list-timers oss-radar.timer
-sudo -u ossradar -H git -C /srv/oss-radar status --short
+sudo -u wiki-publisher -H git -C /srv/oss-radar status --short
 ```
 
 추가로 오늘자 Wiki 페이지, `Home.md`, `data/history.json` 증가분을 확인합니다.
@@ -368,6 +368,23 @@ OCI 중지를 확인한 뒤에만 Mac LaunchAgent를 다시 등록합니다.
 - 다음 자동 실행: 2026-09-27 05:00 KST
 
 이후 서비스 계정은 Wiki 커밋 전에 Git 작성자가 설정되어 있어야 합니다. 발행이 커밋 전에 실패하면 Wiki 클론의 미완료 변경을 먼저 정리해야 다음 `pull --rebase`가 진행됩니다.
+
+### 2026-09-27 공용 게시 계정으로 변경
+
+향후 `dev-blog`와 `research-wiki`도 같은 운영 계정에서 관리할 수 있도록 기존
+`ossradar` 계정의 UID/GID 1003을 유지한 채 `wiki-publisher`로 이름을 변경했습니다.
+
+- 홈을 `/home/wiki-publisher`로 이동하고 Cursor/Codex symlink 복구
+- systemd `User`, `Group`, `HOME`, `PATH`와 Agent 경로 변경
+- 기존 Cursor 로그인과 프로젝트별 GitHub 자격증명 유지 확인
+- 테스트, Wiki push dry-run, 전체 파이프라인 dry-run 성공
+- dry-run 중 history 610개와 원격 Wiki commit 불변
+- `oss-radar.timer`를 enabled/active로 복구
+- 다음 정기 실행: 2026-09-28 05:00 KST
+
+상세 계획, 백업, 검증, 롤백 절차는
+[`WIKI-PUBLISHER-ACCOUNT-MIGRATION.md`](WIKI-PUBLISHER-ACCOUNT-MIGRATION.md)에
+기록했습니다. `dev-blog` 계정 통합은 별도 단계로 진행합니다.
 
 ### 안전 경계
 

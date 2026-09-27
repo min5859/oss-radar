@@ -189,3 +189,29 @@ OSS Radar가 새 계정으로 정상 자동 실행되는 것을 확인한 뒤 �
 4. `/srv/research-wiki` 배포 및 별도 service/timer 구성
 
 프로젝트별 `.env`, GitHub 토큰, 로그, systemd unit은 통합하지 않습니다.
+
+## 9. 실행 결과
+
+2026-09-27에 계획대로 1단계를 완료했습니다.
+
+- 작업 전 `oss-radar.timer`를 disable/stop하고 실행 중 프로세스가 없음을 확인
+- root 전용 백업 생성:
+  `/var/backups/wiki-publisher/ossradar-20260927`
+- `ossradar` 사용자·그룹·홈을 `wiki-publisher`로 변경
+- UID/GID 1003과 `/srv/oss-radar` 데이터 소유권 유지
+- 홈 이동으로 깨진 Cursor/Codex 절대경로 symlink를 새 HOME 기준으로 복구
+- `.bashrc`, systemd `User`, `Group`, `HOME`, `PATH`, Agent 경로 갱신
+- Cursor Agent `2026.09.26-dd393fe` 실행 및 기존 로그인 유지 확인
+- Wiki push dry-run, 단위 테스트 5개, compileall, `bash -n` 통과
+- 전체 파이프라인 dry-run 성공: 후보/README/분석 각 5개, Wiki 게시 생략
+- dry-run 전후 history 610개와 Wiki 최신 commit 불변 확인
+- `oss-radar.timer`를 enabled/active 상태로 복구
+- 다음 실행: 2026-09-28 05:00 KST
+
+첫 정기 실행 후 다음을 추가 확인하면 계정 rename 검증이 완료됩니다.
+
+```bash
+systemctl status oss-radar.service --no-pager
+journalctl -u oss-radar.service --since '2026-09-28 04:55:00 Asia/Seoul' --no-pager
+sudo -u wiki-publisher -H git -C /srv/oss-radar status --short
+```

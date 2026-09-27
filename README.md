@@ -113,6 +113,10 @@ OCI 준비, systemd 설치, 상태 파일 이관, 컷오버와 롤백 절차는
 템플릿은 `docs/systemd/`에 있습니다. GitHub 자격증명 등록, Cursor Agent 로그인,
 기존 Mac 자동화 중지, OCI timer 활성화는 운영자가 직접 확인합니다.
 
+공용 Wiki 게시 계정으로 전환하는 절차는
+[`docs/WIKI-PUBLISHER-ACCOUNT-MIGRATION.md`](docs/WIKI-PUBLISHER-ACCOUNT-MIGRATION.md)에
+별도로 기록합니다.
+
 ---
 
 ## 설정 (`config.yaml`)

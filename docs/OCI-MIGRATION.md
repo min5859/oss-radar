@@ -24,21 +24,20 @@ OCI systemd timer (현재 기준 매일 05:00 KST)
 - Mac LaunchAgent와 OCI timer가 동시에 활성화되지 않습니다.
 - OCI 자동 실행이 2회 연속 성공합니다.
 
-## 현재 상태 (2026-09-26)
+## 현재 상태 (2026-09-28)
 
-끝난 항목:
+이관 완료. 예약 실행이 2회 연속 성공했습니다.
 
-- 운영 경로는 `/srv/oss-radar`이고, `wiki-publisher` 사용자로 실행합니다.
+- 운영 경로는 `/srv/oss-radar`이고, 실행 계정은 `wiki-publisher`입니다.
 - 분석 provider는 Cursor Agent, 모델은 `claude-sonnet-5-medium`입니다.
-- GitHub 읽기/Wiki 쓰기 자격증명, Cursor 로그인, Wiki push dry-run, 게시 없는 전체 dry-run이 끝났습니다.
-- Mac LaunchAgent는 중지되었고, `oss-radar.timer`는 `enabled`입니다.
-- `wiki-publisher`의 Git 작성자는 `Wooki Min <min5859@gmail.com>`입니다.
-- 2026-09-25 Wiki 페이지 수동 재실행이 성공했습니다. 커밋 `47ef076`, `history.json`은 605개입니다.
+- Mac LaunchAgent는 중지되어 있고, `oss-radar.timer`는 매일 05:00 KST에 동작합니다.
+- 2026-09-27 05:00 KST: Wiki `87b2a7e` `Weekly OSS Radar - 2026-09-26`, history 610개.
+- 2026-09-28 05:00 KST: Wiki `a2d0ab5` `Weekly OSS Radar - 2026-09-27`, history 615개.
+- 페이지 날짜는 서버 UTC 기준입니다. 05:00 KST 실행은 전날 UTC 날짜로 기록됩니다.
 
-남은 항목:
+이후 작업:
 
-- 예약 실행 성공은 아직 없습니다. 2026-09-26 05:00 KST 자동 실행은 발행 전에 실패했습니다.
-- 다음 자동 실행은 2026-09-27 05:00 KST입니다. 그 실행과 이어지는 1회까지 성공하면 이관 완료입니다.
+- `dev-blog`와 `research-wiki`를 같은 `wiki-publisher` 계정에서 관리하는 작업은 별도 단계입니다.
 - 롤백이 필요하면 OCI timer를 먼저 끄고, 중지를 확인한 뒤에만 Mac LaunchAgent를 다시 등록합니다.
 
 ## 2. 확인된 환경과 이전 이관에서 재사용할 패턴
@@ -385,6 +384,13 @@ OCI 중지를 확인한 뒤에만 Mac LaunchAgent를 다시 등록합니다.
 상세 계획, 백업, 검증, 롤백 절차는
 [`WIKI-PUBLISHER-ACCOUNT-MIGRATION.md`](WIKI-PUBLISHER-ACCOUNT-MIGRATION.md)에
 기록했습니다. `dev-blog` 계정 통합은 별도 단계로 진행합니다.
+
+### 2026-09-28 예약 실행 2회 연속 성공
+
+- 2026-09-27 05:00 KST (`wiki-publisher`): 수집, 신규 분석 5개, Wiki 발행 성공. 커밋 `87b2a7e`, history 610개. 서비스 결과는 `success`.
+- 2026-09-28 05:00 KST (`wiki-publisher`): 수집과 Wiki 발행 성공. 분석 5개는 직전 dry-run 파일을 재사용. 커밋 `a2d0ab5`, history 615개. 41초, 서비스 결과는 `success`.
+- Wiki 클론은 `origin/master`와 일치하고, 작성자는 `Wooki Min <min5859@gmail.com>`입니다.
+- 완료 조건의 자동 실행 2회 연속 성공을 충족해 이관 완료로 판정합니다.
 
 ### 안전 경계
 

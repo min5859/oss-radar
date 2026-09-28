@@ -240,3 +240,14 @@ systemctl status oss-radar.service --no-pager
 journalctl -u oss-radar.service --since '2026-09-28 04:55:00 Asia/Seoul' --no-pager
 sudo -u wiki-publisher -H git -C /srv/oss-radar status --short
 ```
+
+### 정기 실행 검증
+
+계정 rename 이후 2회 연속 실제 timer 실행과 Wiki 게시가 성공했습니다.
+
+- 2026-09-28 05:00 KST: Wiki `a2d0ab5`, history 610 → 615
+- 2026-09-29 05:00 KST: Wiki `f373a1b`, history 615 → 620
+- 두 실행 모두 service result/exit status `success/0`
+- `/srv/oss-radar` worktree clean, timer enabled/active
+
+이로써 `ossradar` → `wiki-publisher` 계정 rename 검증을 완료합니다.

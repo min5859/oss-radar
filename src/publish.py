@@ -10,6 +10,7 @@ import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import yaml
 
@@ -49,12 +50,15 @@ def git_env() -> dict[str, str]:
     return env
 
 
-def build_weekly_page(repos: list[dict], date_str: str) -> str:
+def build_weekly_page(
+    repos: list[dict], date_str: str, generated_at: datetime | None = None
+) -> str:
     """주간 OSS Radar 위키 페이지 빌드."""
+    generated_at = generated_at or datetime.now(ZoneInfo(CONFIG["wiki"]["timezone"]))
     lines = [
         f"# Weekly OSS Radar - {date_str}",
         "",
-        f"> Auto-generated on {datetime.now().strftime('%Y-%m-%d %H:%M')} KST",
+        f"> Auto-generated on {generated_at.strftime('%Y-%m-%d %H:%M %Z')}",
         "",
         "---",
         "",
@@ -168,9 +172,10 @@ def main(argv: list[str] | None = None) -> None:
 
     repo_cfg = CONFIG["wiki"]["repo"]
     wiki_url = os.environ.get("OSS_RADAR_WIKI_URL", f"git@github.com:{repo_cfg}.wiki.git")
-    date_str = datetime.now().strftime("%Y-%m-%d")
+    generated_at = datetime.now(ZoneInfo(CONFIG["wiki"]["timezone"]))
+    date_str = generated_at.strftime("%Y-%m-%d")
     page_name = f"{date_str}-Weekly-OSS-Radar"
-    page_content = build_weekly_page(repos, date_str)
+    page_content = build_weekly_page(repos, date_str, generated_at)
 
     if args.dry_run:
         if not page_content.strip() or f"# Weekly OSS Radar - {date_str}" not in page_content:

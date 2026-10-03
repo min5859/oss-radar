@@ -11,6 +11,7 @@ WorkingDirectory=/srv/oss-radar
 Environment=HOME=/home/wiki-publisher
 Environment=PATH=/home/wiki-publisher/.local/bin:/usr/local/bin:/usr/bin:/bin
 Environment=GIT_TERMINAL_PROMPT=0
+Environment=TZ=Asia/Seoul
 EnvironmentFile=-/srv/oss-radar/config/.env
 ExecStartPre=/usr/bin/test -x /srv/oss-radar/.venv/bin/python
 ExecStartPre=/usr/bin/test -x /home/wiki-publisher/.local/bin/agent

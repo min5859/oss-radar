@@ -128,6 +128,7 @@ OCI 준비, systemd 설치, 상태 파일 이관, 컷오버와 롤백 절차는
 | `repos.min_stars` | 100 | 최소 star 수 필터 |
 | `categories` | ai, developer-tools, productivity | 관심 카테고리 |
 | `wiki.repo` | min5859/oss-radar | Wiki 발행 대상 레포 |
+| `wiki.timezone` | Asia/Seoul | 페이지 날짜와 생성 시각 기준 |
 | `analysis.provider` | cursor | 분석 CLI provider (`claude`, `codex`, `cursor`) |
 | `analysis.<provider>.model` | provider별 설정 | 비어 있으면 CLI 기본 모델 |
 

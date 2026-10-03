@@ -21,6 +21,7 @@ sources:
 
 wiki:
   repo: "min5859/oss-radar"
+  timezone: "Asia/Seoul"   # 게시 날짜와 생성 시각의 기준
 
 analysis:
   language: "ko"

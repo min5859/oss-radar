@@ -107,7 +107,7 @@ analysis:
   prompt_file: "prompts/analyze.md"
   provider: "cursor"        # claude | codex | cursor
   claude_model: "sonnet"
-  cursor_model: "claude-sonnet-5-medium"
+  cursor_model: "claude-sonnet-5-5-medium"
   max_retries: 2
 ```
 

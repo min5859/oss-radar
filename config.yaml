@@ -37,5 +37,5 @@ analysis:
     model: ""                # codex CLI model (빈 값이면 기본 모델 사용)
 
   cursor:
-    model: "claude-sonnet-5-medium"  # 한국어 요약 리포트용
+    model: "claude-sonnet-5-5-medium"  # 한국어 요약 리포트용
     api_key: ""

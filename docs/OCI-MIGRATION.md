@@ -1,5 +1,17 @@
 # OSS Radar OCI 운영 서버 이관 런북
 
+2026-10-04 분석 모델 변경: `analysis.provider: cursor`를 유지하고
+`analysis.cursor.model`을 `claude-sonnet-5-medium`에서
+`claude-sonnet-5-5-medium`으로 올렸습니다. 기존 Medium 추론 수준은 유지합니다.
+OCI `wiki-publisher`의 `agent --list-models`로 지원 여부를 확인했습니다.
+단위 테스트 8개와 OCI의 게시 없는 한국어 모델 연결 검증이 통과했습니다.
+아래 Sonnet 5 표기는 이관 당시의 기록이며 현재 설정은 `config.yaml`이 기준입니다.
+모델 연결만 검증하며 전체 파이프라인 재실행·재게시·history 초기화는 하지 않습니다.
+이미 존재하는 분석 결과는 기존 멱등성 정책에 따라 재사용합니다.
+
+모델 근거: [Cursor Sonnet 5.5 공식 문서](https://prod.cursor.com/docs/models/claude-sonnet-5-5)
+(확인: 2026-10-04). 실제 CLI 식별자는 OCI 계정의 모델 목록에서 확인합니다.
+
 2026-10-03 운영 보강: `wiki.timezone: Asia/Seoul` 기준으로 페이지 날짜와 생성 시각을
 계산하고 unit의 `TZ`도 동일하게 설정했습니다. UTC 서버의 05:00 KST 실행이
 전날 날짜로 발행되던 문제를 수정했습니다. 기존 페이지명과 링크는 보존합니다.
